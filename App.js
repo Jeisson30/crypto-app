@@ -1,20 +1,45 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
+import Toast from 'react-native-toast-message';
+import MainStackNavigator from './navigation';
 
-export default function App() {
+const App = () => {
+  const toastRef = useRef();
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (!state.isConnected) {
+        showToast('No hay conexión a Internet', 'error');
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const showToast = (message, type) => {
+    toastRef.current?.show({
+      type: type,
+      text1: message,
+      visibilityTime: 5000,
+    });
+  };
+
   return (
     <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
+      <MainStackNavigator />
+      <Toast ref={toastRef} />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
+
+export default App;
