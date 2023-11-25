@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Image, TouchableWithoutFeedback, ScrollView, Alert } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableWithoutFeedback, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { fetchData } from "../services/apiService";
 
 const HomeScreen = () => {
     const navigation = useNavigation();
     const [cryptocurrencies, setCryptocurrencies] = useState([]);
+    const [spinner, setSpinner] = useState(true);
+    const [selectedCrypto, setSelectedCrypto] = useState(null);
 
     useEffect(() => {
         const fetchDataAPI = async () => {
             try {
                 const data = await fetchData();
                 setCryptocurrencies(data);
+                setSpinner(false)
             } catch (error) {
                 console.error('Error fetching data:', error);
+                setSpinner(false)
                 Alert.alert('Por favor intente mas tarde')
             }
         };
@@ -43,14 +47,16 @@ const HomeScreen = () => {
         return cryptoPairs;
     };
     
-
     const renderCrypto = (crypto) => {
+        const isSelected = selectedCrypto && selectedCrypto.id === crypto.id;
         return (
             <TouchableWithoutFeedback
                 key={crypto.id}
                 onPress={() => handleCryptoPress(crypto)}
+                onPressIn={() => setSelectedCrypto(crypto)}
+                onPressOut={() => setSelectedCrypto(null)}
             >
-                <View style={styles.cryptoContainer}>
+                <View style={[styles.cryptoContainer, isSelected && styles.selectedCrypto]}>
                     <Image
                         style={styles.logo}
                         source={{ uri: crypto.image }} 
@@ -67,7 +73,13 @@ const HomeScreen = () => {
     return (
         <ScrollView style={styles.container}>
             <Text style={styles.text}>CriptoMarket</Text>
-            {renderCryptos()}
+            {spinner ? (
+                <View style={styles.spinnerContainer}>
+                    <ActivityIndicator size="large" color="#0000ff" />
+                </View>
+            ) : (
+                renderCryptos()
+            )}
         </ScrollView>
     )
 }
@@ -124,6 +136,15 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 10,
+    },
+    spinnerContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: '50%'
+    },
+    selectedCrypto: {
+        opacity: 0.7,
     },
 });
 
